@@ -3,18 +3,11 @@
 ```mermaid
 
 graph TD
-
-A[Client] -->|Select| B[Database]
-
-B -->|Select| C[Collection]
-
-C -->|CRUD Operations| D[Documents]
-
-C -->|Create| E[Indexes]
-
-C -->|Aggregate| F[Pipeline]
-
-C -->|Relate| G[Relations]
+    A[Client] -->|selectDB| B[Database: testdb.sqlite]
+    B -->|selectCollection| C[Collection: products]
+    B -->|selectCollection| D[Collection: users]
+    C -->|CRUD| E[Data Product]
+    D -->|CRUD| F[Data User]
 
 ```
 
