@@ -4,71 +4,56 @@ namespace MongoLike;
 
 class Database
 {
-    protected $path;
+    protected $dbfile;
+    protected $connection;
     protected $collections = [];
 
-    public function __construct(string $path)
+    public function __construct($dbfile)
     {
-        if (!file_exists($path)) mkdir($path, 0777, true);
-        $this->path = $path;
+        $this->dbfile = $dbfile;
+        $this->connect();
     }
 
-    public function vacuum(): void
+    protected function connect()
     {
-        foreach ($this->listCollections() as $collection) {
-            $collection->drop();
-        }
-        if (is_dir($this->path)) rmdir($this->path);
+        // Buat direktori jika belum ada
+        $dir = dirname($this->dbfile);
+        if (!is_dir($dir)) mkdir($dir, 0777, true);
+
+        $this->connection = new \PDO('sqlite:' . $this->dbfile);
+        $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
 
-    public function drop(): void
+    public function selectCollection($name)
     {
-        $this->vacuum();
-    }
+        $sanitized = $this->sanitizeCollectionName($name);
 
-    public function createCollection(string $name): Collection
-    {
-        $collection = new Collection($name, $this);
-        $collection->createTable();
-        return $collection;
-    }
-
-    public function dropCollection(string $name): void
-    {
-        $collection = $this->selectCollection($name);
-        $collection->drop();
-    }
-
-    public function getCollectionNames(): array
-    {
-        return $this->listCollections();
-    }
-
-    public function listCollections(): array
-    {
-        $collections = [];
-        if (!is_dir($this->path)) return $collections;
-
-        foreach (new \DirectoryIterator($this->path) as $fileInfo) {
-            if ($fileInfo->isDot() || !$fileInfo->isFile()) continue;
-            if ($fileInfo->getExtension() === 'sqlite') {
-                $collections[] = $fileInfo->getBasename('.sqlite');
-            }
-        }
-        return $collections;
-    }
-
-    public function selectCollection(string $name): Collection
-    {
-        $sanitized = preg_replace('/[^a-zA-Z0-9_]/', '_', $name);
         if (!isset($this->collections[$sanitized])) {
-            $this->collections[$sanitized] = new Collection($sanitized, $this);
+            $this->collections[$sanitized] = new Collection($sanitized, $this->connection);
         }
         return $this->collections[$sanitized];
     }
 
-    public function getPath(): string
+    public function getConnection()
     {
-        return $this->path;
+        return $this->connection;
+    }
+
+    public function listCollections()
+    {
+        $stmt = $this->connection->query("SELECT name FROM sqlite_master WHERE type='table'");
+        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+    }
+
+    public function drop()
+    {
+        if (file_exists($this->dbfile)) {
+            unlink($this->dbfile);
+        }
+    }
+
+    private function sanitizeCollectionName($name)
+    {
+        return preg_replace('/[^a-zA-Z0-9_]/', '_', $name);
     }
 }

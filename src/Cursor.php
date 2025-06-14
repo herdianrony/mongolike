@@ -126,9 +126,12 @@ class Cursor implements \Iterator
         $this->data = $results;
     }
 
-    protected function buildQuery(bool $count = false): \PDOStatement
+    protected function buildQuery($count = false)
     {
-        $sql = $count ? 'SELECT COUNT(*) FROM data' : 'SELECT id, document FROM data';
+        $sql = $count
+            ? "SELECT COUNT(*) FROM {$this->collection->name}"
+            : "SELECT id, document FROM {$this->collection->name}";
+
         $params = [];
 
         if ($this->criteria && is_array($this->criteria)) {

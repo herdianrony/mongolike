@@ -4,36 +4,34 @@ namespace MongoLike;
 
 class Client
 {
-    public $path;
+    protected $path;
     protected $databases = [];
 
-    public function __construct(string $path)
+    public function __construct($path)
     {
         $this->path = rtrim(str_replace("\\", "/", $path), '/') . '/';
     }
 
-    public function listDBs(): array
-    {
-        $dbs = [];
-        if (!is_dir($this->path)) return $dbs;
-
-        foreach (new \DirectoryIterator($this->path) as $fileInfo) {
-            if ($fileInfo->isDot() || !$fileInfo->isDir()) continue;
-            $dbs[] = $fileInfo->getFilename();
-        }
-        return $dbs;
-    }
-
-    public function selectDB(string $name): Database
+    public function selectDB($name)
     {
         if (!isset($this->databases[$name])) {
-            $this->databases[$name] = new Database($this->path . $name . '/');
+            $dbfile = $this->path . $name . '.sqlite';
+            $this->databases[$name] = new Database($dbfile);
         }
         return $this->databases[$name];
     }
 
-    public function selectCollection(string $dbname, string $collectionname): Collection
+    public function listDBs()
     {
-        return $this->selectDB($dbname)->selectCollection($collectionname);
+        $dbs = [];
+        if (!is_dir($this->path)) return $dbs;
+
+        foreach (scandir($this->path) as $file) {
+            if ($file === '.' || $file === '..') continue;
+            if (pathinfo($file, PATHINFO_EXTENSION) === 'sqlite') {
+                $dbs[] = pathinfo($file, PATHINFO_FILENAME);
+            }
+        }
+        return $dbs;
     }
 }
