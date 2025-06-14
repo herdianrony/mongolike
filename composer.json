@@ -1,0 +1,32 @@
+{
+    "name": "herdianrony/mongolike",
+    "description": "MongoDB-like interface for SQLite with aggregation, indexes, and relations",
+    "type": "library",
+    "keywords": [
+        "sqlite",
+        "mongodb",
+        "orm",
+        "database",
+        "nosql",
+        "aggregation",
+        "indexes",
+        "relations"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.0",
+        "ext-pdo": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "MongoLike\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Herdian Rony",
+            "email": "your@email.com"
+        }
+    ]
+}
